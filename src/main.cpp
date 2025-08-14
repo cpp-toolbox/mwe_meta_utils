@@ -2,13 +2,15 @@
 #include "utility/meta_utils/meta_utils.hpp"
 #include "utility/user_input/user_input.hpp"
 
-#include "string_invoker/string_invoker.hpp"
+#include "meta_program/meta_program.hpp"
 
 void interactive_invoker() {
 
+    meta_program::MetaProgram meta_program(meta_utils::concrete_types);
+
     std::unordered_map<std::string, meta_utils::MetaFunctionSignature> options_dict;
-    for (size_t i = 0; i < string_invoker::all_meta_function_signatures.size(); ++i) {
-        options_dict[std::to_string(i + 1)] = string_invoker::all_meta_function_signatures[i];
+    for (size_t i = 0; i < meta_program.meta_basic_math.all_meta_function_signatures.size(); ++i) {
+        options_dict[std::to_string(i + 1)] = meta_program.meta_basic_math.all_meta_function_signatures[i];
     }
 
     if (options_dict.empty()) {
@@ -16,17 +18,15 @@ void interactive_invoker() {
         return; // nothing to do
     }
 
-    while (true) {
-        // Build options dictionary fresh each loop in case functions change
+    bool keep_running = true;
 
-        // Display options
+    while (keep_running) {
         std::cout << "\nSelect a function to invoke:\n";
         for (const auto &[key, func] : options_dict) {
             std::cout << key << ". " << func.to_string() << "\n";
         }
         std::cout << "q. Quit\n";
 
-        // Get valid selection or quit
         std::string choice = get_validated_input(
             []() {
                 std::cout << "Enter choice: ";
@@ -44,7 +44,6 @@ void interactive_invoker() {
 
         meta_utils::MetaFunctionSignature selected = options_dict[choice];
 
-        // Collect arguments
         std::vector<std::string> args;
         for (const auto &param : selected.parameters) {
             std::string val =
@@ -52,8 +51,7 @@ void interactive_invoker() {
             args.push_back(val);
         }
 
-        // Assemble full invocation string
-        std::string invocation = selected.get_fully_qualified_name() + "(";
+        std::string invocation = meta_utils::get_fully_qualified_name(selected) + "(";
         for (size_t i = 0; i < args.size(); ++i) {
             invocation += args[i];
             if (i < args.size() - 1) {
@@ -62,12 +60,25 @@ void interactive_invoker() {
         }
         invocation += ")";
 
-        // Call the invoker
-        auto result = string_invoker::invoker_that_returns_std_string(invocation);
+        auto result = meta_program.invoker_that_returns_std_string(invocation);
         if (result.has_value()) {
             std::cout << "Result: " << result.value() << "\n";
         } else {
             std::cout << "Invocation failed.\n";
+        }
+
+        std::string run_again = get_validated_input(
+            []() {
+                std::cout << "Do you want to run another function? (y/n): ";
+                std::string s;
+                std::getline(std::cin, s);
+                return text_utils::trim(s);
+            },
+            [](const std::string &input) { return input == "y" || input == "n"; }, "Please enter 'y' or 'n'.");
+
+        if (run_again == "n") {
+            keep_running = false;
+            std::cout << "Goodbye.\n";
         }
     }
 }
