@@ -8,7 +8,7 @@ void interactive_invoker() {
 
     meta_program::MetaProgram meta_program(meta_utils::concrete_types);
 
-    std::unordered_map<std::string, meta_utils::MetaFunctionSignature> options_dict;
+    std::map<std::string, meta_utils::MetaFunctionSignature> options_dict;
     for (size_t i = 0; i < meta_program.meta_basic_math.all_meta_function_signatures.size(); ++i) {
         options_dict[std::to_string(i + 1)] = meta_program.meta_basic_math.all_meta_function_signatures[i];
     }
@@ -17,12 +17,17 @@ void interactive_invoker() {
         std::cout << "No functions available.\n";
         return; // nothing to do
     }
+    std::vector<std::pair<std::string, meta_utils::MetaFunctionSignature>> sorted_options(options_dict.begin(),
+                                                                                          options_dict.end());
+
+    std::sort(sorted_options.begin(), sorted_options.end(),
+              [](const auto &a, const auto &b) { return std::stoi(a.first) < std::stoi(b.first); });
 
     bool keep_running = true;
 
     while (keep_running) {
         std::cout << "\nSelect a function to invoke:\n";
-        for (const auto &[key, func] : options_dict) {
+        for (const auto &[key, func] : sorted_options) {
             std::cout << key << ". " << func.to_string() << "\n";
         }
         std::cout << "q. Quit\n";
