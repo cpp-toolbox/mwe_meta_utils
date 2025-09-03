@@ -1,13 +1,10 @@
 #ifndef META_BASIC_MATH_HPP
 #define META_BASIC_MATH_HPP
 
-#include <iostream>
-#include <cmath>
-#include <stdexcept>
-#include <string>
-#include <optional>
 #include "../utility/meta_utils/meta_utils.hpp"
 #include "../basic_math.hpp"
+#include <regex>
+#include <optional>
 
 namespace meta_basic_math {
 
@@ -42,12 +39,34 @@ public:
             return std::nullopt;
 
     }
+    std::optional<std::function<int()>> deferred_invoker_that_returns_int(std::string invocation) {
+        if (std::regex_match(invocation, std::regex(mfs_gcd.invocation_regex))) {
+                return gcd_deferred_string_invoker(invocation);
+            }
+            if (std::regex_match(invocation, std::regex(mfs_lcm.invocation_regex))) {
+                return lcm_deferred_string_invoker(invocation);
+            }
+        
+            return std::nullopt;
+
+    }
     std::optional<long> invoker_that_returns_long(std::string invocation) {
         if (std::regex_match(invocation, std::regex(mfs_factorial.invocation_regex))) {
                 return factorial_string_invoker(invocation);
             }
             if (std::regex_match(invocation, std::regex(mfs_fibonacci.invocation_regex))) {
                 return fibonacci_string_invoker(invocation);
+            }
+        
+            return std::nullopt;
+
+    }
+    std::optional<std::function<long()>> deferred_invoker_that_returns_long(std::string invocation) {
+        if (std::regex_match(invocation, std::regex(mfs_factorial.invocation_regex))) {
+                return factorial_deferred_string_invoker(invocation);
+            }
+            if (std::regex_match(invocation, std::regex(mfs_fibonacci.invocation_regex))) {
+                return fibonacci_deferred_string_invoker(invocation);
             }
         
             return std::nullopt;
@@ -74,6 +93,32 @@ public:
             }
             if (std::regex_match(invocation, std::regex(mfs_absolute.invocation_regex))) {
                 return absolute_string_invoker(invocation);
+            }
+        
+            return std::nullopt;
+
+    }
+    std::optional<std::function<double()>> deferred_invoker_that_returns_double(std::string invocation) {
+        if (std::regex_match(invocation, std::regex(mfs_add.invocation_regex))) {
+                return add_deferred_string_invoker(invocation);
+            }
+            if (std::regex_match(invocation, std::regex(mfs_subtract.invocation_regex))) {
+                return subtract_deferred_string_invoker(invocation);
+            }
+            if (std::regex_match(invocation, std::regex(mfs_multiply.invocation_regex))) {
+                return multiply_deferred_string_invoker(invocation);
+            }
+            if (std::regex_match(invocation, std::regex(mfs_divide.invocation_regex))) {
+                return divide_deferred_string_invoker(invocation);
+            }
+            if (std::regex_match(invocation, std::regex(mfs_power.invocation_regex))) {
+                return power_deferred_string_invoker(invocation);
+            }
+            if (std::regex_match(invocation, std::regex(mfs_square_root.invocation_regex))) {
+                return square_root_deferred_string_invoker(invocation);
+            }
+            if (std::regex_match(invocation, std::regex(mfs_absolute.invocation_regex))) {
+                return absolute_deferred_string_invoker(invocation);
             }
         
             return std::nullopt;
@@ -153,6 +198,22 @@ public:
             return result;
 
     }
+    std::optional<std::function<double()>> add_deferred_string_invoker(std::string input) {
+        std::regex re(R"(^\s*add\s*\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\)\s*$)");
+            std::smatch match;
+            if (!std::regex_match(input, match, re)) return std::nullopt;
+        
+            auto conversion1 = [](const std::string &s) { return std::stod(s); };
+            double a = conversion1(match[1]);
+            auto conversion2 = [](const std::string &s) { return std::stod(s); };
+            double b = conversion2(match[2]);
+        
+        auto deferred_func = [=]() {
+            return add(a, b);
+        };
+            return deferred_func;
+
+    }
     std::optional<double> subtract_string_invoker(std::string input) {
         std::regex re(R"(^\s*subtract\s*\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\)\s*$)");
             std::smatch match;
@@ -165,6 +226,22 @@ public:
         
             double result = subtract(a, b);
             return result;
+
+    }
+    std::optional<std::function<double()>> subtract_deferred_string_invoker(std::string input) {
+        std::regex re(R"(^\s*subtract\s*\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\)\s*$)");
+            std::smatch match;
+            if (!std::regex_match(input, match, re)) return std::nullopt;
+        
+            auto conversion1 = [](const std::string &s) { return std::stod(s); };
+            double a = conversion1(match[1]);
+            auto conversion2 = [](const std::string &s) { return std::stod(s); };
+            double b = conversion2(match[2]);
+        
+        auto deferred_func = [=]() {
+            return subtract(a, b);
+        };
+            return deferred_func;
 
     }
     std::optional<double> multiply_string_invoker(std::string input) {
@@ -181,6 +258,22 @@ public:
             return result;
 
     }
+    std::optional<std::function<double()>> multiply_deferred_string_invoker(std::string input) {
+        std::regex re(R"(^\s*multiply\s*\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\)\s*$)");
+            std::smatch match;
+            if (!std::regex_match(input, match, re)) return std::nullopt;
+        
+            auto conversion1 = [](const std::string &s) { return std::stod(s); };
+            double a = conversion1(match[1]);
+            auto conversion2 = [](const std::string &s) { return std::stod(s); };
+            double b = conversion2(match[2]);
+        
+        auto deferred_func = [=]() {
+            return multiply(a, b);
+        };
+            return deferred_func;
+
+    }
     std::optional<double> divide_string_invoker(std::string input) {
         std::regex re(R"(^\s*divide\s*\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\)\s*$)");
             std::smatch match;
@@ -193,6 +286,22 @@ public:
         
             double result = divide(a, b);
             return result;
+
+    }
+    std::optional<std::function<double()>> divide_deferred_string_invoker(std::string input) {
+        std::regex re(R"(^\s*divide\s*\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\)\s*$)");
+            std::smatch match;
+            if (!std::regex_match(input, match, re)) return std::nullopt;
+        
+            auto conversion1 = [](const std::string &s) { return std::stod(s); };
+            double a = conversion1(match[1]);
+            auto conversion2 = [](const std::string &s) { return std::stod(s); };
+            double b = conversion2(match[2]);
+        
+        auto deferred_func = [=]() {
+            return divide(a, b);
+        };
+            return deferred_func;
 
     }
     std::optional<double> power_string_invoker(std::string input) {
@@ -209,6 +318,22 @@ public:
             return result;
 
     }
+    std::optional<std::function<double()>> power_deferred_string_invoker(std::string input) {
+        std::regex re(R"(^\s*power\s*\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+)\s*\)\s*$)");
+            std::smatch match;
+            if (!std::regex_match(input, match, re)) return std::nullopt;
+        
+            auto conversion1 = [](const std::string &s) { return std::stod(s); };
+            double base = conversion1(match[1]);
+            auto conversion2 = [](const std::string &s) { return std::stoi(s); };
+            int exponent = conversion2(match[2]);
+        
+        auto deferred_func = [=]() {
+            return power(base, exponent);
+        };
+            return deferred_func;
+
+    }
     std::optional<long> factorial_string_invoker(std::string input) {
         std::regex re(R"(^\s*factorial\s*\(\s*(\d+)\s*\)\s*$)");
             std::smatch match;
@@ -219,6 +344,20 @@ public:
         
             long result = factorial(n);
             return result;
+
+    }
+    std::optional<std::function<long()>> factorial_deferred_string_invoker(std::string input) {
+        std::regex re(R"(^\s*factorial\s*\(\s*(\d+)\s*\)\s*$)");
+            std::smatch match;
+            if (!std::regex_match(input, match, re)) return std::nullopt;
+        
+            auto conversion1 = [](const std::string &s) { return static_cast<unsigned int>(std::stoul(s)); };
+            unsigned int n = conversion1(match[1]);
+        
+        auto deferred_func = [=]() {
+            return factorial(n);
+        };
+            return deferred_func;
 
     }
     std::optional<int> gcd_string_invoker(std::string input) {
@@ -235,6 +374,22 @@ public:
             return result;
 
     }
+    std::optional<std::function<int()>> gcd_deferred_string_invoker(std::string input) {
+        std::regex re(R"(^\s*gcd\s*\(\s*(-?\d+)\s*,\s*(-?\d+)\s*\)\s*$)");
+            std::smatch match;
+            if (!std::regex_match(input, match, re)) return std::nullopt;
+        
+            auto conversion1 = [](const std::string &s) { return std::stoi(s); };
+            int a = conversion1(match[1]);
+            auto conversion2 = [](const std::string &s) { return std::stoi(s); };
+            int b = conversion2(match[2]);
+        
+        auto deferred_func = [=]() {
+            return gcd(a, b);
+        };
+            return deferred_func;
+
+    }
     std::optional<int> lcm_string_invoker(std::string input) {
         std::regex re(R"(^\s*lcm\s*\(\s*(-?\d+)\s*,\s*(-?\d+)\s*\)\s*$)");
             std::smatch match;
@@ -249,6 +404,22 @@ public:
             return result;
 
     }
+    std::optional<std::function<int()>> lcm_deferred_string_invoker(std::string input) {
+        std::regex re(R"(^\s*lcm\s*\(\s*(-?\d+)\s*,\s*(-?\d+)\s*\)\s*$)");
+            std::smatch match;
+            if (!std::regex_match(input, match, re)) return std::nullopt;
+        
+            auto conversion1 = [](const std::string &s) { return std::stoi(s); };
+            int a = conversion1(match[1]);
+            auto conversion2 = [](const std::string &s) { return std::stoi(s); };
+            int b = conversion2(match[2]);
+        
+        auto deferred_func = [=]() {
+            return lcm(a, b);
+        };
+            return deferred_func;
+
+    }
     std::optional<double> square_root_string_invoker(std::string input) {
         std::regex re(R"(^\s*square_root\s*\(\s*(-?\d+(?:\.\d+)?)\s*\)\s*$)");
             std::smatch match;
@@ -259,6 +430,20 @@ public:
         
             double result = square_root(x);
             return result;
+
+    }
+    std::optional<std::function<double()>> square_root_deferred_string_invoker(std::string input) {
+        std::regex re(R"(^\s*square_root\s*\(\s*(-?\d+(?:\.\d+)?)\s*\)\s*$)");
+            std::smatch match;
+            if (!std::regex_match(input, match, re)) return std::nullopt;
+        
+            auto conversion1 = [](const std::string &s) { return std::stod(s); };
+            double x = conversion1(match[1]);
+        
+        auto deferred_func = [=]() {
+            return square_root(x);
+        };
+            return deferred_func;
 
     }
     std::optional<double> absolute_string_invoker(std::string input) {
@@ -273,6 +458,20 @@ public:
             return result;
 
     }
+    std::optional<std::function<double()>> absolute_deferred_string_invoker(std::string input) {
+        std::regex re(R"(^\s*absolute\s*\(\s*(-?\d+(?:\.\d+)?)\s*\)\s*$)");
+            std::smatch match;
+            if (!std::regex_match(input, match, re)) return std::nullopt;
+        
+            auto conversion1 = [](const std::string &s) { return std::stod(s); };
+            double x = conversion1(match[1]);
+        
+        auto deferred_func = [=]() {
+            return absolute(x);
+        };
+            return deferred_func;
+
+    }
     std::optional<long> fibonacci_string_invoker(std::string input) {
         std::regex re(R"(^\s*fibonacci\s*\(\s*(\d+)\s*\)\s*$)");
             std::smatch match;
@@ -283,6 +482,20 @@ public:
         
             long result = fibonacci(n);
             return result;
+
+    }
+    std::optional<std::function<long()>> fibonacci_deferred_string_invoker(std::string input) {
+        std::regex re(R"(^\s*fibonacci\s*\(\s*(\d+)\s*\)\s*$)");
+            std::smatch match;
+            if (!std::regex_match(input, match, re)) return std::nullopt;
+        
+            auto conversion1 = [](const std::string &s) { return static_cast<unsigned int>(std::stoul(s)); };
+            unsigned int n = conversion1(match[1]);
+        
+        auto deferred_func = [=]() {
+            return fibonacci(n);
+        };
+            return deferred_func;
 
     }
     std::optional<std::string> add_string_invoker_to_string(std::string input) {

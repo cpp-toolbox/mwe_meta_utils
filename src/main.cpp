@@ -94,6 +94,12 @@ int main() {
                                                                                    "src/basic_math.cpp", true, true);
     meta_utils::generate_string_invokers_program_wide({basic_math_settings});
     std::cout << "Hello, World!" << std::endl;
+    meta_program::MetaProgram meta_program({});
+    auto sub = meta_program.deferred_invoker_that_returns_double("subtract(3, 4)");
+
+    std::cout << "subtract: " << sub.value()() << std::endl;
+
     interactive_invoker();
+
     return 0;
 }
