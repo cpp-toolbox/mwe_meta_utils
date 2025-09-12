@@ -3,7 +3,9 @@
 #include "utility/user_input/user_input.hpp"
 
 #include "meta_program/meta_program.hpp"
+#include "custom_type.hpp"
 
+// NOTE: can be removed soon.
 void interactive_invoker() {
 
     meta_program::MetaProgram meta_program(meta_utils::concrete_types);
@@ -88,18 +90,46 @@ void interactive_invoker() {
     }
 }
 
+// ---------- The main function to assemble a MetaClass ----------
+
 int main() {
 
+    auto settings = meta_utils::CustomTypeExtractionSettings("src/custom_type.hpp");
+
+    meta_utils::register_custom_types_into_meta_types(settings);
+
+    // NOTE: another question is how private/public is handled in the context of serialization.
+
+    // this needs to know about the concrete types I believe now.
     meta_utils::StringInvokerGenerationSettingsForHeaderSource basic_math_settings("src/basic_math.hpp",
                                                                                    "src/basic_math.cpp", true, true);
-    meta_utils::generate_string_invokers_program_wide({basic_math_settings});
+    meta_utils::generate_string_invokers_program_wide({basic_math_settings},
+                                                      meta_utils::meta_types.get_concrete_types());
+
+    // TODO: next step is to be able to automatically create serializers for types I want.
     std::cout << "Hello, World!" << std::endl;
-    meta_program::MetaProgram meta_program({});
+    meta_program::MetaProgram meta_program(meta_utils::meta_types.get_concrete_types());
     auto sub = meta_program.deferred_invoker_that_returns_double("subtract(3, 4)");
 
     std::cout << "subtract: " << sub.value()() << std::endl;
 
-    interactive_invoker();
+    X x(42, "hello world", {1, 2, 3, 4, 5, 6});
+    X x2(36, "goobye world", {6, 5, 4, 3, 2, 1});
+    Y y("holder", 99, {x, x2});
+
+    std::cout << meta_program.X_to_string(x) << std::endl;
+
+    auto sx = meta_program.serialize_X(x);
+    auto x_undo = meta_program.deserialize_X(sx);
+
+    std::cout << meta_program.X_to_string(x_undo) << std::endl;
+
+    std::cout << meta_program.Y_to_string(y) << std::endl;
+    auto sy = meta_program.serialize_Y(y);
+    auto y_undo = meta_program.deserialize_Y(sy);
+    std::cout << meta_program.Y_to_string(y_undo) << std::endl;
+
+    // interactive_invoker();
 
     return 0;
 }

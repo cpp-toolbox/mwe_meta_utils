@@ -9,9 +9,6 @@ file(GLOB_RECURSE SOURCES "src/*.cpp")
 # Add the main executable
 add_executable(${PROJECT_NAME} ${SOURCES})
         
-
-# Automatically generated from conan install
-
-# Automatically generated from conan install
+find_package(spdlog)
 find_package(fmt)
-target_link_libraries(${PROJECT_NAME} fmt::fmt)
+target_link_libraries(${PROJECT_NAME} spdlog::spdlog fmt::fmt)
