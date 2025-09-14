@@ -1,4 +1,5 @@
 #include <iostream>
+#include "utility/cpp_parsing/cpp_parsing.hpp"
 #include "utility/meta_utils/meta_utils.hpp"
 #include "utility/user_input/user_input.hpp"
 
@@ -108,14 +109,28 @@ int main() {
 
     // TODO: next step is to be able to automatically create serializers for types I want.
     std::cout << "Hello, World!" << std::endl;
+
+    // TODO: next step is we need struct support, but the good thing is that structs are just special classes where all
+    // things are public by default and so when taking a string represeting a struct we can have the logic that parses
+    // that handle when it's a struct.
+
+    // auto pr = cpp_parsing::enum_class_def_parser->parse(
+    //     " enum class PacketType : uint8_t { MOUSE_UPDATE, GAME_UPDATE, SOUND_UPDATE, }; ");
+    //
+    // // std::cout << pr.to_string() << std::endl;
+    //
+    // auto cpr = cpp_parsing::clean_parse_result(pr);
+    // std::cout << cpr.to_string() << std::endl;
+
     meta_program::MetaProgram meta_program(meta_utils::meta_types.get_concrete_types());
     auto sub = meta_program.deferred_invoker_that_returns_double("subtract(3, 4)");
 
     std::cout << "subtract: " << sub.value()() << std::endl;
 
-    X x(42, "hello world", {1, 2, 3, 4, 5, 6});
-    X x2(36, "goobye world", {6, 5, 4, 3, 2, 1});
-    Y y("holder", 99, {x, x2});
+    B b(13);
+    X x(42, "hello world", {1, 2, 3, 4, 5, 6}, b);
+    X x2(36, "goobye world", {6, 5, 4, 3, 2, 1}, b);
+    Y y("holder", 99, A::TWO, {x, x2});
 
     std::cout << meta_program.X_to_string(x) << std::endl;
 

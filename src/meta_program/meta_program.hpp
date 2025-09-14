@@ -3,6 +3,8 @@
 
 #include "../custom_type.hpp"
 #include "../custom_type.hpp"
+#include "../custom_type.hpp"
+#include "../custom_type.hpp"
 #include "../meta/basic_math.hpp"
 #include <optional>
 #include "../utility/meta_utils/meta_utils.hpp"
@@ -175,6 +177,82 @@ public:
     meta_utils::MetaType deserialize_meta_utils__MetaType() {
 
     }
+    std::string A_to_string(A value) {
+        switch(value) {
+                case A::ONE: return "A::ONE";
+                case A::TWO: return "A::TWO";
+                case A::THREE: return "A::THREE";
+                default: return "<unknown A>";
+            }
+
+    }
+    A string_to_A(std::string s) {
+        if (s == "A::ONE") return A::ONE;
+            if (s == "A::TWO") return A::TWO;
+            if (s == "A::THREE") return A::THREE;
+            return static_cast<A>(0); // default fallback
+
+    }
+    std::vector<uint8_t> serialize_A(A value) {
+        std::vector<uint8_t> buffer(sizeof(uint8_t));
+            uint8_t raw = static_cast<uint8_t>(value);
+            std::memcpy(buffer.data(), &raw, sizeof(uint8_t));
+            return buffer;
+
+    }
+    A deserialize_A(std::vector<uint8_t> buffer) {
+        if (buffer.size() < sizeof(uint8_t)) return static_cast<A>(0);
+            uint8_t raw = 0;
+            std::memcpy(&raw, buffer.data(), sizeof(uint8_t));
+            return static_cast<A>(raw);
+
+    }
+    std::string B_to_string(B obj) {
+        std::ostringstream oss;
+            oss << "{";
+            { auto conv = [](const int &v) { return std::to_string(v); };
+              oss << "val=" << conv(obj.val); }
+            oss << "}";
+            return oss.str();
+
+    }
+    B string_to_B(std::string s) {
+        B obj;
+            std::string trimmed = s.substr(1, s.size() - 2); // remove {}
+            std::istringstream iss(trimmed);
+            std::string token;
+            if (std::getline(iss, token, ',')) {
+                auto pos = token.find('=');
+                if (pos != std::string::npos) {
+                    std::string value_str = token.substr(pos + 1);
+                    auto conv = [](const std::string &s) { return std::stoi(s); };
+                    obj.val = conv(value_str);
+                }
+            }
+            return obj;
+
+    }
+    std::vector<uint8_t> serialize_B(B obj) {
+        std::vector<uint8_t> buffer;
+            { auto ser = [](const int &v) {   std::vector<uint8_t> buf(sizeof(int));   std::memcpy(buf.data(), &v, sizeof(int));   return buf; };
+              auto bytes = ser(obj.val);
+              buffer.insert(buffer.end(), bytes.begin(), bytes.end()); }
+            return buffer;
+
+    }
+    B deserialize_B(std::vector<uint8_t> buffer) {
+        B obj;
+            size_t offset = 0;
+            { auto deser = [](const std::vector<uint8_t> &buf) {   int v;   std::memcpy(&v, buf.data(), sizeof(int));   return v; };
+              size_t len = sizeof(obj.val);
+              if (offset + len > buffer.size()) return obj;
+              std::vector<uint8_t> slice(buffer.begin() + offset, buffer.begin() + offset + len);
+              obj.val = deser(slice);
+              offset += len;
+            }
+            return obj;
+
+    }
     std::string X_to_string(X obj) {
         std::ostringstream oss;
             oss << "{";
@@ -199,6 +277,16 @@ public:
             return oss.str();
         };
               oss << "numbers=" << conv(obj.numbers); }
+            oss << ", ";
+            { auto conv = [=](const B& obj) -> std::string {
+            std::ostringstream oss;
+            oss << "{";
+            { auto conv = [](const int &v) { return std::to_string(v); };
+              oss << "val=" << conv(obj.val); }
+            oss << "}";
+            return oss.str();
+        };
+              oss << "b=" << conv(obj.b); }
             oss << "}";
             return oss.str();
 
@@ -252,6 +340,28 @@ public:
                     obj.numbers = conv(value_str);
                 }
             }
+            if (std::getline(iss, token, ',')) {
+                auto pos = token.find('=');
+                if (pos != std::string::npos) {
+                    std::string value_str = token.substr(pos + 1);
+                    auto conv = [=](const std::string &s) -> B {
+            B obj;
+            std::string trimmed = s.substr(1, s.size() - 2); // remove {}
+            std::istringstream iss(trimmed);
+            std::string token;
+            if (std::getline(iss, token, ',')) {
+                auto pos = token.find('=');
+                if (pos != std::string::npos) {
+                    std::string value_str = token.substr(pos + 1);
+                    auto conv = [](const std::string &s) { return std::stoi(s); };
+                    obj.val = conv(value_str);
+                }
+            }
+            return obj;
+        };
+                    obj.b = conv(value_str);
+                }
+            }
             return obj;
 
     }
@@ -284,6 +394,15 @@ public:
               size_t len = bytes.size();
               buffer.resize(buffer.size() + sizeof(size_t));
               std::memcpy(buffer.data() + buffer.size() - sizeof(size_t), &len, sizeof(size_t));
+              buffer.insert(buffer.end(), bytes.begin(), bytes.end()); }
+            { auto ser = [=](const B& obj) -> std::vector<uint8_t> {
+            std::vector<uint8_t> buffer;
+            { auto ser = [](const int &v) {   std::vector<uint8_t> buf(sizeof(int));   std::memcpy(buf.data(), &v, sizeof(int));   return buf; };
+              auto bytes = ser(obj.val);
+              buffer.insert(buffer.end(), bytes.begin(), bytes.end()); }
+            return buffer;
+        };
+              auto bytes = ser(obj.b);
               buffer.insert(buffer.end(), bytes.begin(), bytes.end()); }
             return buffer;
 
@@ -335,6 +454,24 @@ public:
               obj.numbers = deser(slice);
               offset += len;
             }
+            { auto deser = [=](const std::vector<uint8_t> &buffer) -> B {
+            B obj;
+            size_t offset = 0;
+            { auto deser = [](const std::vector<uint8_t> &buf) {   int v;   std::memcpy(&v, buf.data(), sizeof(int));   return v; };
+              size_t len = sizeof(obj.val);
+              if (offset + len > buffer.size()) return obj;
+              std::vector<uint8_t> slice(buffer.begin() + offset, buffer.begin() + offset + len);
+              obj.val = deser(slice);
+              offset += len;
+            }
+            return obj;
+        };
+              size_t len = sizeof(obj.b);
+              if (offset + len > buffer.size()) return obj;
+              std::vector<uint8_t> slice(buffer.begin() + offset, buffer.begin() + offset + len);
+              obj.b = deser(slice);
+              offset += len;
+            }
             return obj;
 
     }
@@ -346,6 +483,16 @@ public:
             oss << ", ";
             { auto conv = [](const int &v) { return std::to_string(v); };
               oss << "age=" << conv(obj.age); }
+            oss << ", ";
+            { auto conv = [=](A value) -> std::string {
+            switch(value) {
+                case A::ONE: return "A::ONE";
+                case A::TWO: return "A::TWO";
+                case A::THREE: return "A::THREE";
+                default: return "<unknown A>";
+            }
+        };
+              oss << "thing=" << conv(obj.thing); }
             oss << ", ";
             { auto conv = [=](const std::vector<X>& vec) -> std::string {
             std::ostringstream oss;
@@ -374,6 +521,16 @@ public:
             return oss.str();
         };
               oss << "numbers=" << conv(obj.numbers); }
+            oss << ", ";
+            { auto conv = [=](const B& obj) -> std::string {
+            std::ostringstream oss;
+            oss << "{";
+            { auto conv = [](const int &v) { return std::to_string(v); };
+              oss << "val=" << conv(obj.val); }
+            oss << "}";
+            return oss.str();
+        };
+              oss << "b=" << conv(obj.b); }
             oss << "}";
             return oss.str();
         };
@@ -411,6 +568,19 @@ public:
                     std::string value_str = token.substr(pos + 1);
                     auto conv = [](const std::string &s) { return std::stoi(s); };
                     obj.age = conv(value_str);
+                }
+            }
+            if (std::getline(iss, token, ',')) {
+                auto pos = token.find('=');
+                if (pos != std::string::npos) {
+                    std::string value_str = token.substr(pos + 1);
+                    auto conv = [=](const std::string &s) -> A {
+            if (s == "A::ONE") return A::ONE;
+            if (s == "A::TWO") return A::TWO;
+            if (s == "A::THREE") return A::THREE;
+            return static_cast<A>(0); // default fallback
+        };
+                    obj.thing = conv(value_str);
                 }
             }
             if (std::getline(iss, token, ',')) {
@@ -479,6 +649,28 @@ public:
                     obj.numbers = conv(value_str);
                 }
             }
+            if (std::getline(iss, token, ',')) {
+                auto pos = token.find('=');
+                if (pos != std::string::npos) {
+                    std::string value_str = token.substr(pos + 1);
+                    auto conv = [=](const std::string &s) -> B {
+            B obj;
+            std::string trimmed = s.substr(1, s.size() - 2); // remove {}
+            std::istringstream iss(trimmed);
+            std::string token;
+            if (std::getline(iss, token, ',')) {
+                auto pos = token.find('=');
+                if (pos != std::string::npos) {
+                    std::string value_str = token.substr(pos + 1);
+                    auto conv = [](const std::string &s) { return std::stoi(s); };
+                    obj.val = conv(value_str);
+                }
+            }
+            return obj;
+        };
+                    obj.b = conv(value_str);
+                }
+            }
             return obj;
         };
                     result.push_back(conversion(it->str()));
@@ -504,6 +696,14 @@ public:
               buffer.insert(buffer.end(), bytes.begin(), bytes.end()); }
             { auto ser = [](const int &v) {   std::vector<uint8_t> buf(sizeof(int));   std::memcpy(buf.data(), &v, sizeof(int));   return buf; };
               auto bytes = ser(obj.age);
+              buffer.insert(buffer.end(), bytes.begin(), bytes.end()); }
+            { auto ser = [=](A value) -> std::vector<uint8_t> {
+            std::vector<uint8_t> buffer(sizeof(uint8_t));
+            uint8_t raw = static_cast<uint8_t>(value);
+            std::memcpy(buffer.data(), &raw, sizeof(uint8_t));
+            return buffer;
+        };
+              auto bytes = ser(obj.thing);
               buffer.insert(buffer.end(), bytes.begin(), bytes.end()); }
             { auto ser = [=](const std::vector<X>& vec) -> std::vector<uint8_t> {
             std::vector<uint8_t> buffer;
@@ -540,6 +740,15 @@ public:
               size_t len = bytes.size();
               buffer.resize(buffer.size() + sizeof(size_t));
               std::memcpy(buffer.data() + buffer.size() - sizeof(size_t), &len, sizeof(size_t));
+              buffer.insert(buffer.end(), bytes.begin(), bytes.end()); }
+            { auto ser = [=](const B& obj) -> std::vector<uint8_t> {
+            std::vector<uint8_t> buffer;
+            { auto ser = [](const int &v) {   std::vector<uint8_t> buf(sizeof(int));   std::memcpy(buf.data(), &v, sizeof(int));   return buf; };
+              auto bytes = ser(obj.val);
+              buffer.insert(buffer.end(), bytes.begin(), bytes.end()); }
+            return buffer;
+        };
+              auto bytes = ser(obj.b);
               buffer.insert(buffer.end(), bytes.begin(), bytes.end()); }
             return buffer;
         };
@@ -578,6 +787,18 @@ public:
               if (offset + len > buffer.size()) return obj;
               std::vector<uint8_t> slice(buffer.begin() + offset, buffer.begin() + offset + len);
               obj.age = deser(slice);
+              offset += len;
+            }
+            { auto deser = [=](const std::vector<uint8_t> &buffer) -> A {
+            if (buffer.size() < sizeof(uint8_t)) return static_cast<A>(0);
+            uint8_t raw = 0;
+            std::memcpy(&raw, buffer.data(), sizeof(uint8_t));
+            return static_cast<A>(raw);
+        };
+              size_t len = sizeof(obj.thing);
+              if (offset + len > buffer.size()) return obj;
+              std::vector<uint8_t> slice(buffer.begin() + offset, buffer.begin() + offset + len);
+              obj.thing = deser(slice);
               offset += len;
             }
             { auto deser = [=](const std::vector<uint8_t>& buffer) -> std::vector<X> {
@@ -632,6 +853,24 @@ public:
               if (offset + len > buffer.size()) return obj;
               std::vector<uint8_t> slice(buffer.begin() + offset, buffer.begin() + offset + len);
               obj.numbers = deser(slice);
+              offset += len;
+            }
+            { auto deser = [=](const std::vector<uint8_t> &buffer) -> B {
+            B obj;
+            size_t offset = 0;
+            { auto deser = [](const std::vector<uint8_t> &buf) {   int v;   std::memcpy(&v, buf.data(), sizeof(int));   return v; };
+              size_t len = sizeof(obj.val);
+              if (offset + len > buffer.size()) return obj;
+              std::vector<uint8_t> slice(buffer.begin() + offset, buffer.begin() + offset + len);
+              obj.val = deser(slice);
+              offset += len;
+            }
+            return obj;
+        };
+              size_t len = sizeof(obj.b);
+              if (offset + len > buffer.size()) return obj;
+              std::vector<uint8_t> slice(buffer.begin() + offset, buffer.begin() + offset + len);
+              obj.b = deser(slice);
               offset += len;
             }
             return obj;
