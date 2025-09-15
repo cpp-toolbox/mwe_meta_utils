@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <array>
 
 enum class A : uint8_t {
     ONE,
@@ -13,7 +14,11 @@ enum class A : uint8_t {
 
 struct B {
     int val;
+    std::array<float, 3> position = {1, 2, 3};
+    std::string s = "default_str";
 };
+
+// using Position = std::array<float, 3>;
 
 class X {
   public:
