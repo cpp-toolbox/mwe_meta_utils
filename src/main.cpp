@@ -127,7 +127,7 @@ int main() {
 
     std::cout << "subtract: " << sub.value()() << std::endl;
 
-    B b(13);
+    B b(13, {3, 3, 3});
     X x(42, "hello world", {1, 2, 3, 4, 5, 6}, b);
     X x2(36, "goobye world", {6, 5, 4, 3, 2, 1}, b);
     Y y("holder", 99, A::TWO, {x, x2});
@@ -144,7 +144,7 @@ int main() {
     auto y_undo = meta_program.deserialize_Y(sy);
     std::cout << meta_program.Y_to_string(y_undo) << std::endl;
 
-    // interactive_invoker();
+    interactive_invoker();
 
     return 0;
 }

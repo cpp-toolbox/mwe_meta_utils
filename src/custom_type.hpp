@@ -6,6 +6,8 @@
 #include <vector>
 #include <array>
 
+using MyVectorInt = std::vector<int>;
+
 enum class A : uint8_t {
     ONE,
     TWO,
@@ -14,6 +16,7 @@ enum class A : uint8_t {
 
 struct B {
     int val;
+    MyVectorInt mvi;
     std::array<float, 3> position = {1, 2, 3};
     std::string s = "default_str";
 };
