@@ -6,92 +6,13 @@
 #include "meta_program/meta_program.hpp"
 #include "custom_type.hpp"
 
-// NOTE: can be removed soon.
-void interactive_invoker() {
-
-    meta_program::MetaProgram meta_program(meta_utils::concrete_types);
-
-    std::map<std::string, meta_utils::MetaFunctionSignature> options_dict;
-    for (size_t i = 0; i < meta_program.meta_basic_math.all_meta_function_signatures.size(); ++i) {
-        options_dict[std::to_string(i + 1)] = meta_program.meta_basic_math.all_meta_function_signatures[i];
-    }
-
-    if (options_dict.empty()) {
-        std::cout << "No functions available.\n";
-        return; // nothing to do
-    }
-    std::vector<std::pair<std::string, meta_utils::MetaFunctionSignature>> sorted_options(options_dict.begin(),
-                                                                                          options_dict.end());
-
-    std::sort(sorted_options.begin(), sorted_options.end(),
-              [](const auto &a, const auto &b) { return std::stoi(a.first) < std::stoi(b.first); });
-
-    bool keep_running = true;
-
-    while (keep_running) {
-        std::cout << "\nSelect a function to invoke:\n";
-        for (const auto &[key, func] : sorted_options) {
-            std::cout << key << ". " << func.to_string() << "\n";
-        }
-        std::cout << "q. Quit\n";
-
-        std::string choice = get_validated_input(
-            []() {
-                std::cout << "Enter choice: ";
-                std::string s;
-                std::getline(std::cin, s);
-                return text_utils::trim(s);
-            },
-            [&](const std::string &input) { return input == "q" || options_dict.find(input) != options_dict.end(); },
-            "Invalid choice. Please try again.");
-
-        if (choice == "q") {
-            std::cout << "Goodbye.\n";
-            break;
-        }
-
-        meta_utils::MetaFunctionSignature selected = options_dict[choice];
-
-        std::vector<std::string> args;
-        for (const auto &param : selected.parameters) {
-            std::string val =
-                get_input_with_default("Enter value for " + param.name + " (" + param.type.get_type_name() + ")", "0");
-            args.push_back(val);
-        }
-
-        std::string invocation = meta_utils::get_fully_qualified_name(selected) + "(";
-        for (size_t i = 0; i < args.size(); ++i) {
-            invocation += args[i];
-            if (i < args.size() - 1) {
-                invocation += ", ";
-            }
-        }
-        invocation += ")";
-
-        auto result = meta_program.invoker_that_returns_std_string(invocation);
-        if (result.has_value()) {
-            std::cout << "Result: " << result.value() << "\n";
-        } else {
-            std::cout << "Invocation failed.\n";
-        }
-
-        std::string run_again = get_validated_input(
-            []() {
-                std::cout << "Do you want to run another function? (y/n): ";
-                std::string s;
-                std::getline(std::cin, s);
-                return text_utils::trim(s);
-            },
-            [](const std::string &input) { return input == "y" || input == "n"; }, "Please enter 'y' or 'n'.");
-
-        if (run_again == "n") {
-            keep_running = false;
-            std::cout << "Goodbye.\n";
-        }
-    }
-}
-
-// ---------- The main function to assemble a MetaClass ----------
+// what did we just do, well something important in that now the meta program can be globally available. which is great,
+// potentially can we make it a submodule at all? Next step now that this is the case we want to be able to serialize
+// bigger and bigger things, such as the whole transform class, if we could do that it'd be a great step. Either way I
+// don't think this was a waste of time. So now what's the next step? Well I want to be able to run a server with a
+// particular sequence of packets and then see what it would output in terms of client packets, and then I want to use
+// those outgoing packets to simulate one tick of empty blah and then reconcile over many frames and that gives me a way
+// to test that and then I can fix the flag issue.
 
 int main() {
 
@@ -122,29 +43,114 @@ int main() {
     // auto cpr = cpp_parsing::clean_parse_result(pr);
     // std::cout << cpr.to_string() << std::endl;
 
-    meta_program::MetaProgram meta_program(meta_utils::meta_types.get_concrete_types());
-    auto sub = meta_program.deferred_invoker_that_returns_double("subtract(3, 4)");
+    // meta_program::MetaProgram meta_program(meta_utils::meta_types.get_concrete_types());
+    // auto sub = meta_program.deferred_invoker_that_returns_double("subtract(3, 4)");
 
-    std::cout << "subtract: " << sub.value()() << std::endl;
+    // std::cout << "subtract: " << sub.value()() << std::endl;
+
+    // TODO: if a class has no fixed size or dynamic storage then its serialization can be very simplified.
 
     B b(13, {3, 3, 3});
-    X x(42, "hello world", {1, 2, 3, 4, 5, 6}, b);
-    X x2(36, "goobye world", {6, 5, 4, 3, 2, 1}, b);
+    X x(42, "hello world", {1, 2, 3, 4, 5, 6}, b, true);
+    X x2(36, "goobye world", {6, 5, 4, 3, 2, 1}, b, false);
     Y y("holder", 99, A::TWO, {x, x2});
 
-    std::cout << meta_program.X_to_string(x) << std::endl;
+    std::cout << meta_program->X_to_string(x) << std::endl;
 
-    auto sx = meta_program.serialize_X(x);
-    auto x_undo = meta_program.deserialize_X(sx);
+    auto sx = meta_program->serialize_X(x);
+    auto x_undo = meta_program->deserialize_X(sx);
 
-    std::cout << meta_program.X_to_string(x_undo) << std::endl;
+    std::cout << text_utils::format_nested_brace_string_recursive(meta_program->X_to_string(x_undo)) << std::endl;
 
-    std::cout << meta_program.Y_to_string(y) << std::endl;
-    auto sy = meta_program.serialize_Y(y);
-    auto y_undo = meta_program.deserialize_Y(sy);
-    std::cout << meta_program.Y_to_string(y_undo) << std::endl;
+    std::cout << meta_program->Y_to_string(y) << std::endl;
+    auto sy = meta_program->serialize_Y(y);
+    auto y_undo = meta_program->deserialize_Y(sy);
+    std::cout << meta_program->Y_to_string(y_undo) << std::endl;
 
-    interactive_invoker();
+    std::cout << "3" << std::endl;
+
+    ClassWithUnorderedMap class_with_unordered_map;
+    class_with_unordered_map.map.emplace(0, x);
+    class_with_unordered_map.map.emplace(1, x2);
+
+    std::cout << meta_program->ClassWithUnorderedMap_to_string(class_with_unordered_map) << std::endl;
+    auto sclass_with_unordered_map = meta_program->serialize_ClassWithUnorderedMap(class_with_unordered_map);
+    auto class_with_unordered_map_undo = meta_program->deserialize_ClassWithUnorderedMap(sclass_with_unordered_map);
+    std::cout << meta_program->ClassWithUnorderedMap_to_string(class_with_unordered_map_undo) << std::endl;
+
+    std::cout << "4" << std::endl;
+
+    // startfold instagib game state
+
+    InstagibCTFGameState game_state;
+    game_state.id = 1;
+
+    // Create first character
+    InstagibCharacterState char1;
+    char1.client_id = 101;
+    char1.physics_state = {1};
+    char1.camera_state = {0, 0, 0};
+    char1.is_dead = false;
+    char1.has_flag = false;
+    game_state.character_states.push_back(char1);
+
+    // Create second character
+    InstagibCharacterState char2;
+    char2.client_id = 102;
+    char2.physics_state = {2};
+    char2.camera_state = {90, 0, 0};
+    char2.is_dead = false;
+    char2.has_flag = true;
+    game_state.character_states.push_back(char2);
+
+    // Create third character
+    InstagibCharacterState char3;
+    char3.client_id = 103;
+    char3.physics_state = {3};
+    char3.camera_state = {45, 45, 0};
+    char3.is_dead = true;
+    char3.has_flag = false;
+    game_state.character_states.push_back(char3);
+
+    std::cout << meta_program->InstagibCTFGameState_to_string(game_state) << std::endl;
+    auto sgame_state = meta_program->serialize_InstagibCTFGameState(game_state);
+    auto game_state_undo = meta_program->deserialize_InstagibCTFGameState(sgame_state);
+    std::cout << meta_program->InstagibCTFGameState_to_string(game_state_undo) << std::endl;
+
+    std::cout << "after" << std::endl;
+    std::cout << text_utils::format_nested_brace_string_recursive(
+                     meta_program->InstagibCTFGameState_to_string(game_state))
+              << std::endl;
+    std::cout << text_utils::format_nested_brace_string_recursive(
+                     meta_program->InstagibCTFGameState_to_string(game_state_undo))
+              << std::endl;
+
+    // endfold
+
+    std::cout << "5" << std::endl;
+
+    // startfold test optional
+    ClassWithOptional class_with_optional;
+    class_with_optional.opt_x = x;
+
+    std::cout << meta_program->ClassWithOptional_to_string(class_with_optional) << std::endl;
+    auto sclass_with_optional = meta_program->serialize_ClassWithOptional(class_with_optional);
+    auto class_with_optional_undo = meta_program->deserialize_ClassWithOptional(sclass_with_optional);
+    std::cout << meta_program->ClassWithOptional_to_string(class_with_optional_undo) << std::endl;
+
+    ClassWithOptional empty_class_with_optional;
+    empty_class_with_optional.opt_x = std::nullopt;
+
+    std::cout << meta_program->ClassWithOptional_to_string(empty_class_with_optional) << std::endl;
+    auto sempty_class_with_optional = meta_program->serialize_ClassWithOptional(empty_class_with_optional);
+    auto empty_class_with_optional_undo = meta_program->deserialize_ClassWithOptional(sempty_class_with_optional);
+    std::cout << meta_program->ClassWithOptional_to_string(empty_class_with_optional_undo) << std::endl;
+
+    // endfold
+
+    std::cout << "6" << std::endl;
+
+    // interactive_invoker();
 
     return 0;
 }

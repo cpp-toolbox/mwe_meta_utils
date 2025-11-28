@@ -13,10 +13,12 @@ double divide(double a, double b) {
     return a / b;
 }
 
+int function_that_shouldnt_get_picked_up() { return 3; }
+
 double power(double base, int exponent) { return std::pow(base, exponent); }
 
-unsigned long long factorial(unsigned int n) {
-    unsigned long long result = 1;
+unsigned int factorial(unsigned int n) {
+    unsigned int result = 1;
     for (unsigned int i = 2; i <= n; ++i)
         result *= i;
     return result;
@@ -46,12 +48,12 @@ double square_root(double x) {
 
 double absolute(double x) { return x < 0 ? -x : x; }
 
-unsigned long long fibonacci(unsigned int n) {
+unsigned int fibonacci(unsigned int n) {
     if (n == 0)
         return 0;
     if (n == 1)
         return 1;
-    unsigned long long prev = 0, curr = 1;
+    unsigned int prev = 0, curr = 1;
     for (unsigned int i = 2; i <= n; ++i) {
         unsigned long long next = prev + curr;
         prev = curr;

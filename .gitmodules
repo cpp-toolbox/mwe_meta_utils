@@ -25,3 +25,6 @@
 [submodule "src/utility/user_input"]
 	path = src/utility/user_input
 	url = git@github.com:cpp-toolbox/user_input.git
+[submodule "src/utility/lazy_construction"]
+	path = src/utility/lazy_construction
+	url = git@github.com:cpp-toolbox/lazy_construction.git
